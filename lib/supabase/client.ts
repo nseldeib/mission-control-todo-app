@@ -5,8 +5,14 @@ import type { Database } from "./types"
 let supabaseInstance: ReturnType<typeof createBrowserClient<Database>> | null = null
 
 export function createClient() {
-  // Check if we're in a preview environment (v0.dev)
-  if (typeof window !== "undefined" && window.location.hostname.includes("vusercontent.net")) {
+  // Check if we're in a preview environment
+  const isPreview =
+    typeof window !== "undefined" &&
+    (window.location.hostname.includes("vusercontent.net") ||
+      window.location.hostname.includes("localhost") ||
+      !process.env.NEXT_PUBLIC_SUPABASE_URL)
+
+  if (isPreview) {
     // Return a mock client for preview environment
     return createMockClient()
   }
@@ -38,6 +44,18 @@ function createMockClient() {
     user_metadata: {
       full_name: "Demo Astronaut",
     },
+    aud: "authenticated",
+    role: "authenticated",
+    email_confirmed_at: new Date().toISOString(),
+    phone_confirmed_at: null,
+    confirmed_at: new Date().toISOString(),
+    last_sign_in_at: new Date().toISOString(),
+    app_metadata: {
+      provider: "email",
+      providers: ["email"],
+    },
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   }
 
   return {
@@ -46,43 +64,92 @@ function createMockClient() {
         data: { user: mockUser },
         error: null,
       }),
+      getSession: async () => ({
+        data: {
+          session: {
+            access_token: "mock-token",
+            refresh_token: "mock-refresh-token",
+            expires_in: 3600,
+            expires_at: Date.now() + 3600000,
+            token_type: "bearer",
+            user: mockUser,
+          },
+        },
+        error: null,
+      }),
       signInWithPassword: async () => ({
-        data: { user: mockUser },
+        data: { user: mockUser, session: { user: mockUser } },
         error: null,
       }),
       signUp: async () => ({
-        data: { user: mockUser },
+        data: { user: mockUser, session: { user: mockUser } },
         error: null,
       }),
       signOut: async () => ({
         error: null,
       }),
+      onAuthStateChange: (callback: any) => {
+        // Immediately call with signed in state
+        setTimeout(() => callback("SIGNED_IN", { user: mockUser }), 100)
+        return { data: { subscription: { unsubscribe: () => {} } } }
+      },
     },
     from: (table: string) => ({
-      select: (columns?: string) => ({
+      select: (columns?: string) => {
+        const baseQuery = {
+          eq: (column: string, value: any) => {
+            if (table === "daily_focuses" || table === "daily_reflections") {
+              return {
+                single: async () => getMockData(table, "single"),
+              }
+            }
+            return {
+              order: (column: string, options?: any) => ({
+                data: getMockData(table, "array").data,
+                error: null,
+              }),
+            }
+          },
+          or: (filter: string) => ({
+            order: (column: string, options?: any) => ({
+              data: getMockData(table, "array").data,
+              error: null,
+            }),
+          }),
+          order: (column: string, options?: any) => ({
+            data: getMockData(table, "array").data,
+            error: null,
+          }),
+        }
+        return baseQuery
+      },
+      insert: (data: any) => ({
+        select: (columns?: string) => ({
+          single: async () => ({
+            data: {
+              ...data,
+              id: `mock-${Date.now()}`,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            },
+            error: null,
+          }),
+        }),
+      }),
+      update: (data: any) => ({
         eq: (column: string, value: any) => ({
-          single: async () => getMockData(table, "single"),
-          order: (column: string, options?: any) => ({
-            data: getMockData(table, "array"),
-            error: null,
+          select: (columns?: string) => ({
+            single: async () => ({
+              data: { ...data, id: value, updated_at: new Date().toISOString() },
+              error: null,
+            }),
           }),
-          data: getMockData(table, "array"),
+        }),
+      }),
+      delete: () => ({
+        eq: (column: string, value: any) => ({
           error: null,
         }),
-        or: (filter: string) => ({
-          order: (column: string, options?: any) => ({
-            data: getMockData(table, "array"),
-            error: null,
-          }),
-          data: getMockData(table, "array"),
-          error: null,
-        }),
-        order: (column: string, options?: any) => ({
-          data: getMockData(table, "array"),
-          error: null,
-        }),
-        data: getMockData(table, "array"),
-        error: null,
       }),
     }),
   }
@@ -125,6 +192,10 @@ function getMockData(table: string, type: "single" | "array") {
       },
     },
     todos: {
+      single: {
+        data: null,
+        error: null,
+      },
       array: {
         data: [
           {
@@ -193,8 +264,16 @@ function getMockData(table: string, type: "single" | "array") {
         data: null,
         error: null,
       },
+      array: {
+        data: [],
+        error: null,
+      },
     },
     projects: {
+      single: {
+        data: null,
+        error: null,
+      },
       array: {
         data: [
           {

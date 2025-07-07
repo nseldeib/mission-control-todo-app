@@ -2,8 +2,13 @@ import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
 
 export async function createClient() {
-  // Check if we're in a preview environment
-  if (process.env.NODE_ENV === "development" && !process.env.NEXT_PUBLIC_SUPABASE_URL) {
+  // Check if we're in a preview environment (v0.dev) by checking headers or environment
+  const isPreview =
+    process.env.NODE_ENV === "development" ||
+    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  if (isPreview) {
     return createMockServerClient()
   }
 
@@ -35,6 +40,18 @@ function createMockServerClient() {
     user_metadata: {
       full_name: "Demo Astronaut",
     },
+    aud: "authenticated",
+    role: "authenticated",
+    email_confirmed_at: new Date().toISOString(),
+    phone_confirmed_at: null,
+    confirmed_at: new Date().toISOString(),
+    last_sign_in_at: new Date().toISOString(),
+    app_metadata: {
+      provider: "email",
+      providers: ["email"],
+    },
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   }
 
   return {
@@ -43,17 +60,71 @@ function createMockServerClient() {
         data: { user: mockUser },
         error: null,
       }),
+      getSession: async () => ({
+        data: {
+          session: {
+            access_token: "mock-token",
+            refresh_token: "mock-refresh-token",
+            expires_in: 3600,
+            expires_at: Date.now() + 3600000,
+            token_type: "bearer",
+            user: mockUser,
+          },
+        },
+        error: null,
+      }),
     },
     from: (table: string) => ({
-      select: (columns?: string) => ({
+      select: (columns?: string) => {
+        const baseQuery = {
+          eq: (column: string, value: any) => {
+            if (table === "daily_focuses" || table === "daily_reflections") {
+              return {
+                single: async () => getMockServerData(table, "single"),
+              }
+            }
+            return {
+              order: (column: string, options?: any) => ({
+                data: getMockServerData(table, "array").data,
+                error: null,
+              }),
+            }
+          },
+          or: (filter: string) => ({
+            order: (column: string, options?: any) => ({
+              data: getMockServerData(table, "array").data,
+              error: null,
+            }),
+          }),
+          order: (column: string, options?: any) => ({
+            data: getMockServerData(table, "array").data,
+            error: null,
+          }),
+        }
+        return baseQuery
+      },
+      insert: (data: any) => ({
+        select: (columns?: string) => ({
+          single: async () => ({
+            data: { ...data, id: `mock-${Date.now()}` },
+            error: null,
+          }),
+        }),
+      }),
+      update: (data: any) => ({
         eq: (column: string, value: any) => ({
-          single: async () => getMockServerData(table, "single"),
-          order: (column: string, options?: any) => getMockServerData(table, "array"),
+          select: (columns?: string) => ({
+            single: async () => ({
+              data: { ...data, id: value },
+              error: null,
+            }),
+          }),
         }),
-        or: (filter: string) => ({
-          order: (column: string, options?: any) => getMockServerData(table, "array"),
+      }),
+      delete: () => ({
+        eq: (column: string, value: any) => ({
+          error: null,
         }),
-        order: (column: string, options?: any) => getMockServerData(table, "array"),
       }),
     }),
   }
@@ -78,8 +149,28 @@ function getMockServerData(table: string, type: "single" | "array") {
         },
         error: null,
       },
+      array: {
+        data: [
+          {
+            id: "focus-1",
+            user_id: "demo-user-id",
+            focus_date: today,
+            title: "Master Cosmic Productivity",
+            description:
+              "Focus on completing high-priority mission objectives and maintaining stellar performance throughout the day",
+            completed: false,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          },
+        ],
+        error: null,
+      },
     },
     todos: {
+      single: {
+        data: null,
+        error: null,
+      },
       array: {
         data: [
           {
@@ -148,8 +239,16 @@ function getMockServerData(table: string, type: "single" | "array") {
         data: null,
         error: null,
       },
+      array: {
+        data: [],
+        error: null,
+      },
     },
     projects: {
+      single: {
+        data: null,
+        error: null,
+      },
       array: {
         data: [
           {
