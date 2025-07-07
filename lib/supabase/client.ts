@@ -1,42 +1,21 @@
 import { createBrowserClient } from "@supabase/ssr"
 import type { Database } from "./types"
 
-// Global variable to store the singleton instance
-let supabaseInstance: ReturnType<typeof createBrowserClient<Database>> | null = null
-
 export function createClient() {
   // Check if we're in a preview environment
-  const isPreview =
-    typeof window !== "undefined" &&
-    (window.location.hostname.includes("vusercontent.net") ||
-      window.location.hostname.includes("localhost") ||
-      !process.env.NEXT_PUBLIC_SUPABASE_URL)
+  const isPreview = !process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
   if (isPreview) {
     // Return a mock client for preview environment
     return createMockClient()
   }
 
-  // If we're on the server, always create a new instance
-  if (typeof window === "undefined") {
-    return createBrowserClient<Database>(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    )
-  }
-
-  // On the client, return existing instance or create new one
-  if (!supabaseInstance) {
-    supabaseInstance = createBrowserClient<Database>(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    )
-  }
-
-  return supabaseInstance
+  return createBrowserClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  )
 }
 
-// Mock client for preview environment
 function createMockClient() {
   const mockUser = {
     id: "demo-user-id",
@@ -77,25 +56,40 @@ function createMockClient() {
         },
         error: null,
       }),
-      signInWithPassword: async () => ({
-        data: { user: mockUser, session: { user: mockUser } },
+      signInWithPassword: async (credentials: any) => ({
+        data: {
+          user: mockUser,
+          session: {
+            access_token: "mock-token",
+            refresh_token: "mock-refresh-token",
+            expires_in: 3600,
+            expires_at: Date.now() + 3600000,
+            token_type: "bearer",
+            user: mockUser,
+          },
+        },
         error: null,
       }),
-      signUp: async () => ({
-        data: { user: mockUser, session: { user: mockUser } },
+      signUp: async (credentials: any) => ({
+        data: {
+          user: mockUser,
+          session: {
+            access_token: "mock-token",
+            refresh_token: "mock-refresh-token",
+            expires_in: 3600,
+            expires_at: Date.now() + 3600000,
+            token_type: "bearer",
+            user: mockUser,
+          },
+        },
         error: null,
       }),
       signOut: async () => ({
         error: null,
       }),
-      onAuthStateChange: (callback: any) => {
-        // Immediately call with signed in state
-        setTimeout(() => callback("SIGNED_IN", { user: mockUser }), 100)
-        return { data: { subscription: { unsubscribe: () => {} } } }
-      },
     },
     from: (table: string) => ({
-      select: (columns?: string) => createMockClientQueryBuilder(table, columns),
+      select: (columns?: string) => createMockQueryBuilder(table, columns),
       insert: (data: any) => ({
         select: (columns?: string) => ({
           single: async () => ({
@@ -108,6 +102,7 @@ function createMockClient() {
             error: null,
           }),
         }),
+        error: null,
       }),
       update: (data: any) => ({
         eq: (column: string, value: any) => ({
@@ -117,6 +112,7 @@ function createMockClient() {
               error: null,
             }),
           }),
+          error: null,
         }),
       }),
       delete: () => ({
@@ -128,7 +124,7 @@ function createMockClient() {
   }
 }
 
-function createMockClientQueryBuilder(table: string, columns?: string) {
+function createMockQueryBuilder(table: string, columns?: string) {
   const queryBuilder = {
     eq: (column: string, value: any) => {
       const newBuilder = { ...queryBuilder }
@@ -147,6 +143,12 @@ function createMockClientQueryBuilder(table: string, columns?: string) {
       }
       return newBuilder
     },
+    gte: (column: string, value: any) => ({
+      order: (column: string, options?: any) => ({
+        data: getMockData(table, "array").data,
+        error: null,
+      }),
+    }),
     or: (filter: string) => ({
       order: (column: string, options?: any) => ({
         data: getMockData(table, "array").data,
@@ -165,6 +167,7 @@ function createMockClientQueryBuilder(table: string, columns?: string) {
 
 function getMockData(table: string, type: "single" | "array") {
   const today = new Date().toISOString().split("T")[0]
+  const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0]
 
   const mockData = {
     daily_focuses: {
@@ -177,6 +180,7 @@ function getMockData(table: string, type: "single" | "array") {
           description:
             "Focus on completing high-priority mission objectives and maintaining stellar performance throughout the day",
           completed: false,
+          completed_at: null,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         },
@@ -192,8 +196,20 @@ function getMockData(table: string, type: "single" | "array") {
             description:
               "Focus on completing high-priority mission objectives and maintaining stellar performance throughout the day",
             completed: false,
+            completed_at: null,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
+          },
+          {
+            id: "focus-2",
+            user_id: "demo-user-id",
+            focus_date: yesterday,
+            title: "Deep Space Learning",
+            description: "Absorb new knowledge and expand cosmic understanding",
+            completed: true,
+            completed_at: new Date(Date.now() - 3600000).toISOString(),
+            created_at: new Date(Date.now() - 86400000).toISOString(),
+            updated_at: new Date(Date.now() - 3600000).toISOString(),
           },
         ],
         error: null,
@@ -223,44 +239,6 @@ function getMockData(table: string, type: "single" | "array") {
               title: "Cosmic Productivity",
               color: "#6366f1",
               emoji: "🚀",
-            },
-          },
-          {
-            id: "todo-2",
-            user_id: "demo-user-id",
-            title: "Complete space training module",
-            description: "Finish the advanced navigation course",
-            emoji: "🧑‍🚀",
-            priority: "medium",
-            completed: false,
-            starred: false,
-            due_date: today,
-            project_id: "project-2",
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            projects: {
-              title: "Learning Journey",
-              color: "#8b5cf6",
-              emoji: "📚",
-            },
-          },
-          {
-            id: "todo-3",
-            user_id: "demo-user-id",
-            title: "Morning cosmic meditation",
-            description: "Center yourself for the day ahead",
-            emoji: "🧘",
-            priority: "low",
-            completed: true,
-            starred: false,
-            due_date: today,
-            project_id: "project-3",
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            projects: {
-              title: "Health & Wellness",
-              color: "#10b981",
-              emoji: "💪",
             },
           },
         ],
@@ -295,28 +273,6 @@ function getMockData(table: string, type: "single" | "array") {
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
           },
-          {
-            id: "project-2",
-            user_id: "demo-user-id",
-            title: "Learning Journey",
-            description: "Expand knowledge across the universe",
-            emoji: "📚",
-            color: "#8b5cf6",
-            completed: false,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          },
-          {
-            id: "project-3",
-            user_id: "demo-user-id",
-            title: "Health & Wellness",
-            description: "Maintain astronaut-level fitness",
-            emoji: "💪",
-            color: "#10b981",
-            completed: false,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          },
         ],
         error: null,
       },
@@ -325,6 +281,3 @@ function getMockData(table: string, type: "single" | "array") {
 
   return mockData[table as keyof typeof mockData]?.[type] || { data: null, error: null }
 }
-
-// Export the singleton instance for direct use (client-side only)
-export const supabase = createClient()

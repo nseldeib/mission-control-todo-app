@@ -11,6 +11,7 @@ export type Database = {
           title: string
           description: string | null
           completed: boolean
+          completed_at: string | null
           created_at: string
           updated_at: string
         }
@@ -21,6 +22,7 @@ export type Database = {
           title: string
           description?: string | null
           completed?: boolean
+          completed_at?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -31,6 +33,7 @@ export type Database = {
           title?: string
           description?: string | null
           completed?: boolean
+          completed_at?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -76,7 +79,7 @@ export type Database = {
           title: string
           description: string | null
           emoji: string | null
-          color: string | null
+          color: string
           completed: boolean
           created_at: string
           updated_at: string
@@ -87,7 +90,7 @@ export type Database = {
           title: string
           description?: string | null
           emoji?: string | null
-          color?: string | null
+          color?: string
           completed?: boolean
           created_at?: string
           updated_at?: string
@@ -98,7 +101,7 @@ export type Database = {
           title?: string
           description?: string | null
           emoji?: string | null
-          color?: string | null
+          color?: string
           completed?: boolean
           created_at?: string
           updated_at?: string
@@ -112,7 +115,7 @@ export type Database = {
           title: string
           description: string | null
           emoji: string | null
-          priority: string | null
+          priority: string
           completed: boolean
           starred: boolean
           due_date: string | null
@@ -126,7 +129,7 @@ export type Database = {
           title: string
           description?: string | null
           emoji?: string | null
-          priority?: string | null
+          priority?: string
           completed?: boolean
           starred?: boolean
           due_date?: string | null
@@ -140,7 +143,7 @@ export type Database = {
           title?: string
           description?: string | null
           emoji?: string | null
-          priority?: string | null
+          priority?: string
           completed?: boolean
           starred?: boolean
           due_date?: string | null

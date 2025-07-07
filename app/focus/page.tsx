@@ -3,9 +3,9 @@ import { createClient } from "@/lib/supabase/server"
 import FocusClient from "./focus-client"
 
 export default async function FocusPage() {
-  const supabase = createClient()
-
   try {
+    const supabase = await createClient()
+
     const {
       data: { user },
       error: authError,
@@ -69,6 +69,8 @@ export default async function FocusPage() {
     }
 
     const today = new Date().toISOString().split("T")[0]
+    const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0]
+
     const mockTodayFocus = {
       id: "focus-1",
       user_id: "demo-user-id",
@@ -77,6 +79,7 @@ export default async function FocusPage() {
       description:
         "Focus on completing high-priority mission objectives and maintaining stellar performance throughout the day",
       completed: false,
+      completed_at: null,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     }
@@ -86,12 +89,13 @@ export default async function FocusPage() {
       {
         id: "focus-2",
         user_id: "demo-user-id",
-        focus_date: new Date(Date.now() - 86400000).toISOString().split("T")[0],
+        focus_date: yesterday,
         title: "Deep Space Learning",
         description: "Absorb new knowledge and expand cosmic understanding",
         completed: true,
+        completed_at: new Date(Date.now() - 3600000).toISOString(),
         created_at: new Date(Date.now() - 86400000).toISOString(),
-        updated_at: new Date(Date.now() - 86400000).toISOString(),
+        updated_at: new Date(Date.now() - 3600000).toISOString(),
       },
     ]
 
