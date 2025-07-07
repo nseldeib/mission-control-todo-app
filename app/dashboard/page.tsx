@@ -13,6 +13,17 @@ export default async function DashboardPage() {
 
   if (authError || !user) {
     console.error("Auth error:", authError)
+    // In preview environment, don't redirect, just show with mock data
+    if (typeof window !== "undefined" && window.location.hostname.includes("vusercontent.net")) {
+      const mockUser = {
+        id: "demo-user-id",
+        email: "demo@cosmictasks.app",
+        user_metadata: {
+          full_name: "Demo Astronaut",
+        },
+      }
+      return <DashboardClient user={mockUser} todayFocus={null} todayTasks={[]} todayReflection={null} projects={[]} />
+    }
     redirect("/login")
   }
 
