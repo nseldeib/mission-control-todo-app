@@ -95,34 +95,7 @@ function createMockClient() {
       },
     },
     from: (table: string) => ({
-      select: (columns?: string) => {
-        const baseQuery = {
-          eq: (column: string, value: any) => {
-            if (table === "daily_focuses" || table === "daily_reflections") {
-              return {
-                single: async () => getMockData(table, "single"),
-              }
-            }
-            return {
-              order: (column: string, options?: any) => ({
-                data: getMockData(table, "array").data,
-                error: null,
-              }),
-            }
-          },
-          or: (filter: string) => ({
-            order: (column: string, options?: any) => ({
-              data: getMockData(table, "array").data,
-              error: null,
-            }),
-          }),
-          order: (column: string, options?: any) => ({
-            data: getMockData(table, "array").data,
-            error: null,
-          }),
-        }
-        return baseQuery
-      },
+      select: (columns?: string) => createMockClientQueryBuilder(table, columns),
       insert: (data: any) => ({
         select: (columns?: string) => ({
           single: async () => ({
@@ -153,6 +126,41 @@ function createMockClient() {
       }),
     }),
   }
+}
+
+function createMockClientQueryBuilder(table: string, columns?: string) {
+  const queryBuilder = {
+    eq: (column: string, value: any) => {
+      const newBuilder = { ...queryBuilder }
+      newBuilder.eq = (column2: string, value2: any) => {
+        if (table === "daily_focuses" || table === "daily_reflections") {
+          return {
+            single: async () => getMockData(table, "single"),
+          }
+        }
+        return {
+          order: (column: string, options?: any) => ({
+            data: getMockData(table, "array").data,
+            error: null,
+          }),
+        }
+      }
+      return newBuilder
+    },
+    or: (filter: string) => ({
+      order: (column: string, options?: any) => ({
+        data: getMockData(table, "array").data,
+        error: null,
+      }),
+    }),
+    order: (column: string, options?: any) => ({
+      data: getMockData(table, "array").data,
+      error: null,
+    }),
+    single: async () => getMockData(table, "single"),
+  }
+
+  return queryBuilder
 }
 
 function getMockData(table: string, type: "single" | "array") {
