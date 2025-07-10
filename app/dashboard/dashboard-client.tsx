@@ -7,6 +7,7 @@ import { Progress } from "@/components/ui/progress"
 import { Rocket, Target, Plus, CheckCircle, BookOpen, LogOut, Settings, BarChart3, Star } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import Link from "next/link"
+import WikiWidget from "@/components/wiki-widget"
 
 interface DashboardClientProps {
   user: any
@@ -431,6 +432,9 @@ export default function DashboardClient({
                 </Link>
               </CardContent>
             </Card>
+
+            {/* Personal Wiki */}
+            <WikiWidget userId={user?.id || "demo-user-id"} />
           </div>
         </div>
       </div>

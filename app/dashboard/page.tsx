@@ -50,6 +50,14 @@ export default async function DashboardPage() {
       .eq("completed", false)
       .order("created_at", { ascending: false })
 
+    // Get recent wiki entries
+    const { data: wikiEntries } = await supabase
+      .from("wiki_entries")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("updated_at", { ascending: false })
+      .limit(5)
+
     return (
       <DashboardClient
         user={user}
@@ -57,6 +65,7 @@ export default async function DashboardPage() {
         todayTasks={todayTasks || []}
         todayReflection={todayReflection}
         projects={projects || []}
+        wikiEntries={wikiEntries || []}
       />
     )
   } catch (error) {
@@ -185,6 +194,7 @@ export default async function DashboardPage() {
         todayTasks={mockTodayTasks}
         todayReflection={null}
         projects={mockProjects}
+        wikiEntries={[]}
       />
     )
   }
