@@ -277,6 +277,71 @@ function getMockData(table: string, type: "single" | "array") {
         error: null,
       },
     },
+    wiki_entries: {
+      single: {
+        data: null,
+        error: null,
+      },
+      array: {
+        data: [
+          {
+            id: "wiki-1",
+            user_id: "demo-user-id",
+            title: "Productivity System",
+            summary: "My personal productivity methodology and tools",
+            content:
+              "# Productivity System\n\nThis is my comprehensive approach to staying productive and organized in both work and personal life.\n\n## Core Principles\n\n1. **Capture Everything** - Use a trusted system to capture all tasks, ideas, and commitments\n2. **Process Regularly** - Review and organize captured items daily\n3. **Focus on Outcomes** - Always connect tasks to larger goals and outcomes\n\n## Tools & Methods\n\n- Getting Things Done (GTD) methodology\n- Time blocking for deep work\n- Weekly and monthly reviews\n- Digital task management with analog backup\n\n## Key Habits\n\n- Morning planning session (15 minutes)\n- End-of-day review (10 minutes)\n- Weekly review (30 minutes)\n- Monthly goal assessment (1 hour)",
+            tags: ["productivity", "system", "gtd", "organization"],
+            category: "work",
+            status: "published",
+            priority: "high",
+            is_public: false,
+            rating: 5,
+            file_urls: [],
+            related_links: ["https://gettingthingsdone.com", "https://todoist.com/productivity-methods"],
+            created_at: new Date(Date.now() - 86400000 * 7).toISOString(),
+            updated_at: new Date(Date.now() - 3600000).toISOString(),
+          },
+          {
+            id: "wiki-2",
+            user_id: "demo-user-id",
+            title: "Learning Resources",
+            summary: "Curated list of learning materials and courses across different topics",
+            content:
+              "# Learning Resources\n\nA comprehensive collection of learning materials, courses, and resources I've found valuable.\n\n## Programming & Development\n\n### JavaScript/TypeScript\n- **Course**: The Complete JavaScript Course (Jonas Schmedtmann)\n- **Book**: You Don't Know JS series\n- **Practice**: LeetCode, HackerRank\n\n### React/Next.js\n- **Documentation**: Official React docs\n- **Course**: React - The Complete Guide (Maximilian Schwarzmüller)\n- **Practice**: Build projects, contribute to open source\n\n## Design\n\n### UI/UX\n- **Course**: Design for Developers (Gary Simon)\n- **Tool**: Figma for prototyping\n- **Inspiration**: Dribbble, Behance\n\n## Productivity & Business\n\n### Books\n- Getting Things Done by David Allen\n- Deep Work by Cal Newport\n- The Lean Startup by Eric Ries\n\n### Courses\n- Building a Second Brain (Tiago Forte)\n- The Complete Digital Marketing Course",
+            tags: ["learning", "resources", "education", "development", "design"],
+            category: "learning",
+            status: "draft",
+            priority: "medium",
+            is_public: true,
+            rating: 4,
+            file_urls: [],
+            related_links: ["https://javascript.info", "https://react.dev", "https://nextjs.org/learn"],
+            created_at: new Date(Date.now() - 86400000 * 3).toISOString(),
+            updated_at: new Date(Date.now() - 7200000).toISOString(),
+          },
+          {
+            id: "wiki-3",
+            user_id: "demo-user-id",
+            title: "Project Ideas",
+            summary: "Collection of project ideas and concepts to explore",
+            content:
+              "# Project Ideas\n\nA running list of project ideas, concepts, and things I want to build or explore.\n\n## Web Applications\n\n### Personal Finance Tracker\n- **Concept**: Simple expense tracking with categorization\n- **Tech Stack**: Next.js, Supabase, Recharts\n- **Features**: \n  - Expense categorization\n  - Monthly/yearly reports\n  - Budget tracking\n  - Receipt photo upload\n\n### Habit Tracker\n- **Concept**: Visual habit tracking with streaks\n- **Tech Stack**: React Native, SQLite\n- **Features**:\n  - Daily check-ins\n  - Streak visualization\n  - Progress analytics\n  - Reminder notifications\n\n## Learning Projects\n\n### AI Chat Assistant\n- **Concept**: Personal AI assistant for productivity\n- **Tech Stack**: OpenAI API, Vector DB, Next.js\n- **Features**:\n  - Document Q&A\n  - Task management integration\n  - Calendar scheduling\n\n### Code Snippet Manager\n- **Concept**: Personal code snippet library\n- **Tech Stack**: Electron, Monaco Editor\n- **Features**:\n  - Syntax highlighting\n  - Tag-based organization\n  - Search functionality\n  - Export/import",
+            tags: ["projects", "ideas", "development", "planning"],
+            category: "ideas",
+            status: "published",
+            priority: "low",
+            is_public: false,
+            rating: 3,
+            file_urls: [],
+            related_links: [],
+            created_at: new Date(Date.now() - 86400000 * 1).toISOString(),
+            updated_at: new Date(Date.now() - 1800000).toISOString(),
+          },
+        ],
+        error: null,
+      },
+    },
   }
 
   return mockData[table as keyof typeof mockData]?.[type] || { data: null, error: null }

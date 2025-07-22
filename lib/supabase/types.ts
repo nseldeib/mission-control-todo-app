@@ -161,6 +161,60 @@ export type Database = {
           },
         ]
       }
+      wiki_entries: {
+        Row: {
+          id: string
+          user_id: string
+          title: string
+          summary: string | null
+          content: string | null
+          tags: string[]
+          category: string
+          status: string
+          priority: string
+          is_public: boolean
+          rating: number | null
+          file_urls: string[]
+          related_links: string[]
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          title: string
+          summary?: string | null
+          content?: string | null
+          tags?: string[]
+          category?: string
+          status?: string
+          priority?: string
+          is_public?: boolean
+          rating?: number | null
+          file_urls?: string[]
+          related_links?: string[]
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          title?: string
+          summary?: string | null
+          content?: string | null
+          tags?: string[]
+          category?: string
+          status?: string
+          priority?: string
+          is_public?: boolean
+          rating?: number | null
+          file_urls?: string[]
+          related_links?: string[]
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -248,3 +302,5 @@ export type Enums<
   : PublicEnumNameOrOptions extends keyof Database["public"]["Enums"]
     ? Database["public"]["Enums"][PublicEnumNameOrOptions]
     : never
+
+export type WikiEntry = Tables<"wiki_entries">
